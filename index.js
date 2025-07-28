@@ -110,15 +110,25 @@ function videoInfo(apiKey, linkId) {
     const channelIdPattern = /^UC[a-zA-Z0-9_-]{22}$/;
     return channelIdPattern.test(channelId);
 }
+  function isChannelHandle(linkId) {
+    try {
+        const { pathname } = new URL(linkId);
+        const segmentos = pathname.split('/').filter(Boolean);
+        return segmentos.length < 2;
+    } catch (e) {
+        return false;
+    }
+}
 
   function getYouTubeChannelUrl(linkId, apiKey) {
     if (!validator.isURL(linkId) && !isChannelId(linkId)) {
         if (linkId.startsWith('@') ) {
             linkId = linkId.substring(1);
         }
-        return `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&forUsername=${linkId}&key=${apiKey}`;
-    } else if (isChannelId(linkId)) {
-        return `https://www.googleapis.com/youtube/v3/channels?id=${linkId}&part=snippet,contentDetails,statistics&key=${apiKey}`;
+        return `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails,statistics&forHandle=${linkId}&key=${apiKey}`;
+    } else if (isChannelHandle(linkId)) {
+        const channelId = linkConverter(linkId);
+        return `https://www.googleapis.com/youtube/v3/channels?forHandle=${channelId}&part=snippet,contentDetails,statistics&key=${apiKey}`;
     } else {
         const channelId = linkConverter(linkId);
         return `https://www.googleapis.com/youtube/v3/channels?id=${channelId}&part=snippet,contentDetails,statistics&key=${apiKey}`;
@@ -128,7 +138,7 @@ function videoInfo(apiKey, linkId) {
   function channelInfo(apiKey, linkId) {
     return new Promise((resolve, reject) => {
     try {
-        const url = getYouTubeChannelUrl(linkId, "AIzaSyAoyN3b1hH4VTIe0ta2d5E0zgXg--Hg0l4");
+        const url = getYouTubeChannelUrl(linkId, apiKey);
 
         const options = {
             method: 'GET',
